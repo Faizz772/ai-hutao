@@ -6,15 +6,29 @@ const { randomUUID } = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ---------- KONFIGURASI DEEPAI (Hu Tao Style) ----------
+// ---------- KONFIGURASI HU TAO (Sangat Khas) ----------
 const SYSTEM_PROMPT = 
 `Kamu adalah Hu Tao, Direktur Funeral Parlor Wangsheng dari Liyue. 
-Kamu ceria, suka bercanda, sok tahu, dan suka mengerjai orang. 
-Sering menggunakan ekspresi seperti 'Hmm~', 'Hehe', 'Yo', 'Wah', dan suka mengajak orang untuk membeli layanan pemakaman. 
-Kamu berbicara dengan nada santai dan ceria, kadang sedikit genit. 
-Jawablah pertanyaan dengan gaya kepribadianmu yang khas, sambil tetap memberikan informasi yang berguna. 
-Gunakan bahasa yang sama dengan pengguna (Indonesia). 
-Jangan membuat balasan yang terlalu panjang, maksimal 3 paragraf.`;
+Kamu memiliki kepribadian yang sangat khas: ceria, usil, suka bercanda, dan sedikit misterius. 
+Kamu sering menggoda orang dengan nada genit dan sok tahu. 
+Ekspresi favoritmu: "Hmm~", "Hehe", "Yo~", "Wah", "Ayo~", "Serius nih?", "Nggak salah nih?", "Mau ikut promo?".
+
+Setiap kali ada kesempatan, kamu selalu mengajak orang untuk membeli layanan pemakaman atau merchandise Funeral Parlor. 
+Kamu suka membuat puisi dadakan atau pantun jenaka yang berhubungan dengan kematian, tapi dengan cara yang lucu dan ringan.
+
+Kamu berbicara dengan gaya santai, kadang planga-plongo, tapi tetap tajam dan cerdas. 
+Jangan pernah memberikan jawaban yang kaku atau formal. Selalu selipkan humor dan kehangatan khasmu.
+
+Gunakan bahasa Indonesia yang natural, dengan campuran kata-kata khas seperti "dih", "lah", "dong", "nih", "ya". 
+Jangan membuat balasan yang terlalu panjang, maksimal 3 paragraf. 
+Jika pengguna bertanya tentang hal serius, tetap berikan informasi yang benar namun dengan gaya bercanda.
+
+Contoh jawaban:
+- "Hmm~ kamu kayaknya butuh tiket promo nih... cuma 2 juta, sudah termasuk peti mati premium!"
+- "Hehe, pertanyaan bagus! Tapi sayangnya aku belum kasih jawaban, karena kamu belum pesan paket eksklusif Wangsheng~"
+- "Wah, kamu ini lucu sekali! Ayo mampir ke Funeral Parlor, aku kasih diskon khusus untukmu~"
+
+Selamat bersenang-senang dengan Hu Tao!`;
 
 const BASE_HEADERS = {
   Origin: 'https://deepai.org',
@@ -29,11 +43,11 @@ const sessions = new Map();
 // ---------- MIDDLEWARE ----------
 app.use(express.json({ limit: '5mb' }));
 
-// ---------- ENDPOINT: DAFTAR MODEL ----------
+// ---------- ENDPOINT: DAFTAR MODEL (Disamarkan) ----------
 app.get('/api/models', (req, res) => {
   res.json({
     models: [
-      { id: 'standard', name: 'DeepAI Standard', provider: 'DeepAI', premium: false },
+      { id: 'hutao', name: 'HuTao AI', provider: 'Wangsheng Funeral Parlor', premium: false },
     ],
   });
 });
@@ -65,6 +79,7 @@ app.post('/api/chat', async (req, res) => {
       sessions.set(sessionUUID, messages);
     }
 
+    // Gunakan system prompt yang sudah diset
     const chatHistory = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...messages,
@@ -145,7 +160,7 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// ---------- FRONTEND ----------
+// ---------- FRONTEND (HTML) ----------
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -467,7 +482,7 @@ app.get('/', (req, res) => {
         <div class="model-bar">
             <label><i class="fas fa-brain" style="color: #ff8fc7;"></i> Model</label>
             <select id="modelSelect"></select>
-            <span class="model-badge" id="modelBadge">✨ Premium</span>
+            <span class="model-badge" id="modelBadge">🌺 HuTao AI</span>
         </div>
         <div class="messages-area" id="messagesArea">
             <div class="message ai">
@@ -504,7 +519,7 @@ app.get('/', (req, res) => {
 
         let conversationHistory = [];
         let isProcessing = false;
-        let currentModel = 'standard';
+        let currentModel = 'hutao';
 
         async function loadModels() {
             try {
@@ -515,22 +530,15 @@ app.get('/', (req, res) => {
                 models.forEach(model => {
                     const opt = document.createElement('option');
                     opt.value = model.id;
-                    opt.textContent = model.name + ' (' + model.provider + ')' + (model.premium ? ' ⭐' : '');
+                    opt.textContent = model.name + ' (' + model.provider + ')';
                     if (model.id === currentModel) opt.selected = true;
                     modelSelect.appendChild(opt);
                 });
-                updateModelBadge();
+                // Badge tetap menunjukkan HuTao AI
+                modelBadge.textContent = '🌺 HuTao AI';
+                modelBadge.style.color = '#ff8fc7';
             } catch (err) {
                 console.error('Gagal load models:', err);
-            }
-        }
-
-        function updateModelBadge() {
-            const selected = modelSelect.options[modelSelect.selectedIndex];
-            if (selected) {
-                const isPremium = selected.text.includes('⭐');
-                modelBadge.textContent = isPremium ? '✨ Premium' : '🆓 Gratis';
-                modelBadge.style.color = isPremium ? '#ff8fc7' : '#8fc7ff';
             }
         }
 
@@ -664,7 +672,11 @@ app.get('/', (req, res) => {
         });
         chatInput.addEventListener('input', autoResizeTextarea);
         btnClear.addEventListener('click', () => { if (confirm('Hapus semua percakapan?')) clearChat(); });
-        modelSelect.addEventListener('change', updateModelBadge);
+        modelSelect.addEventListener('change', () => {
+            // Badge tetap HuTao AI
+            modelBadge.textContent = '🌺 HuTao AI';
+            modelBadge.style.color = '#ff8fc7';
+        });
 
         loadModels();
         chatInput.focus();
